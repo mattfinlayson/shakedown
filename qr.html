@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GD Today — R1 Creation QR Code</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: #0a0a0a;
+      color: #e8e8e0;
+      font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      gap: 24px;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #f0ead8;
+      letter-spacing: 0.02em;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: #a8885a;
+      text-align: center;
+      max-width: 340px;
+      line-height: 1.5;
+    }
+    #qr-container {
+      background: #fff;
+      padding: 16px;
+      border-radius: 12px;
+    }
+    .url {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      max-width: 380px;
+      word-break: break-all;
+    }
+    .instructions {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 16px 20px;
+      max-width: 380px;
+      width: 100%;
+    }
+    .instructions h2 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #a8885a;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+    .instructions ol {
+      padding-left: 18px;
+      font-size: 13px;
+      color: #bbb;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+  <h1>☠ GD Today in History</h1>
+  <p class="subtitle">Scan this QR code with your Rabbit R1 to install the Grateful Dead "Today in History" creation.</p>
+
+  <div id="qr-container">
+    <canvas id="qr"></canvas>
+  </div>
+  <p class="url" id="url-label"></p>
+
+  <div class="instructions">
+    <h2>How to install</h2>
+    <ol>
+      <li>On your R1, open the <strong>Creations</strong> scanner</li>
+      <li>Point the camera at the QR code above</li>
+      <li>The creation installs automatically</li>
+      <li>Find it in your R1 app drawer</li>
+    </ol>
+  </div>
+
+  <script>
+    // Minimal QR code generator (no CDN dependency)
+    // Uses the qrcodejs approach via a small inline lib
+    const CREATION_URL = (() => {
+      const base = window.location.href.replace(/\/qr\.html.*$/, '');
+      return base.endsWith('/') ? base + 'index.html' : base + '/index.html';
+    })();
+
+    document.getElementById('url-label').textContent = CREATION_URL;
+
+    // Load QRCode library from CDN
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    script.onload = () => {
+      new QRCode(document.getElementById('qr'), {
+        text: CREATION_URL,
+        width: 220,
+        height: 220,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    };
+    script.onerror = () => {
+      document.getElementById('qr-container').innerHTML =
+        '<p style="color:#c00;font-size:13px;padding:8px">Could not load QR library.<br>URL: ' + CREATION_URL + '</p>';
+    };
+    document.head.appendChild(script);
+  </script>
+</body>
+</html>

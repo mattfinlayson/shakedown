@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=240, initial-scale=1.0, user-scalable=no">
+  <title>GD Today</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 240px;
+      height: 282px;
+      overflow: hidden;
+      background: #0a0a0a;
+      color: #e8e8e0;
+      font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 13px;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    #app {
+      width: 240px;
+      height: 282px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ── HEADER ─────────────────────────────────────── */
+    #header {
+      flex-shrink: 0;
+      background: #111;
+      border-bottom: 1px solid #222;
+      padding: 7px 10px 5px;
+    }
+
+    #header-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #a8885a;
+      text-transform: uppercase;
+    }
+
+    #header-date {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f0ead8;
+      margin-top: 1px;
+      line-height: 1.2;
+    }
+
+    #header-venue {
+      font-size: 12px;
+      color: #b0a890;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #header-location {
+      font-size: 11px;
+      color: #7a7060;
+      margin-top: 1px;
+    }
+
+    /* ── TAPE INFO ───────────────────────────────────── */
+    #tape-bar {
+      flex-shrink: 0;
+      background: #0e0e0e;
+      border-bottom: 1px solid #1e1e1e;
+      padding: 4px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #tape-icon {
+      font-size: 14px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    #tape-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    #tape-source {
+      font-size: 11px;
+      color: #c8b87a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #tape-lineage {
+      font-size: 10px;
+      color: #5a5448;
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #tape-rating {
+      flex-shrink: 0;
+      font-size: 10px;
+      color: #a8885a;
+      font-weight: 600;
+    }
+
+    /* ── TRACKLIST ───────────────────────────────────── */
+    #tracklist-container {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      /* hide scrollbar but keep scrolling */
+      scrollbar-width: none;
+    }
+
+    #tracklist-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    #tracklist {
+      padding: 4px 0;
+    }
+
+    .set-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #4a443a;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 6px 10px 3px;
+    }
+
+    .track-row {
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      height: 36px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin: 0 4px;
+      transition: background 0.12s;
+      gap: 6px;
+    }
+
+    .track-row:active {
+      background: #1e1e16;
+    }
+
+    .track-row.playing {
+      background: #1a1a10;
+    }
+
+    .track-num {
+      font-size: 10px;
+      color: #4a443a;
+      width: 18px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .track-row.playing .track-num {
+      display: none;
+    }
+
+    .play-indicator {
+      display: none;
+      width: 18px;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .track-row.playing .play-indicator {
+      display: flex;
+    }
+
+    /* Animated bars */
+    .bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 12px;
+    }
+
+    .bar {
+      width: 2px;
+      background: #a8885a;
+      border-radius: 1px;
+      transform-origin: bottom;
+    }
+
+    .track-row.playing.paused .bar {
+      animation: none !important;
+      height: 6px !important;
+    }
+
+    .bar:nth-child(1) { animation: bounce 0.7s ease-in-out infinite; height: 8px; }
+    .bar:nth-child(2) { animation: bounce 0.7s ease-in-out 0.15s infinite; height: 12px; }
+    .bar:nth-child(3) { animation: bounce 0.7s ease-in-out 0.3s infinite; height: 5px; }
+
+    @keyframes bounce {
+      0%, 100% { transform: scaleY(0.4); }
+      50%       { transform: scaleY(1); }
+    }
+
+    .track-title {
+      flex: 1;
+      font-size: 13px;
+      color: #d8d0bc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track-row.playing .track-title {
+      color: #e8d89a;
+    }
+
+    .track-dur {
+      font-size: 10px;
+      color: #4a443a;
+      flex-shrink: 0;
+    }
+
+    /* ── BOTTOM BAR ──────────────────────────────────── */
+    #bottom-bar {
+      flex-shrink: 0;
+      height: 44px;
+      background: #111;
+      border-top: 1px solid #222;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 8px;
+    }
+
+    #play-btn {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      color: #a8885a;
+      font-size: 18px;
+      transition: color 0.1s;
+    }
+
+    #play-btn:active { color: #f0c870; }
+
+    #now-playing-wrap {
+      flex: 1;
+      overflow: hidden;
+      height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    #now-playing {
+      font-size: 12px;
+      color: #b0a890;
+      white-space: nowrap;
+      padding-right: 16px;
+    }
+
+    #now-playing.marquee {
+      display: inline-block;
+      animation: marquee 8s linear infinite;
+    }
+
+    @keyframes marquee {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    #progress-bar-wrap {
+      position: absolute;
+      bottom: 44px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #1e1e1e;
+    }
+
+    #progress-bar {
+      height: 100%;
+      background: #a8885a;
+      width: 0%;
+      transition: width 0.5s linear;
+    }
+
+    /* ── LOADING / ERROR ─────────────────────────────── */
+    #overlay {
+      position: absolute;
+      inset: 0;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 10;
+    }
+
+    #overlay.hidden { display: none; }
+
+    .skull {
+      font-size: 36px;
+      line-height: 1;
+    }
+
+    .overlay-label {
+      font-size: 12px;
+      color: #7a7060;
+      text-align: center;
+      line-height: 1.5;
+      padding: 0 24px;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #222;
+      border-top-color: #a8885a;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #retry-btn {
+      margin-top: 4px;
+      padding: 8px 20px;
+      background: #1e1e12;
+      border: 1px solid #a8885a;
+      border-radius: 6px;
+      color: #a8885a;
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+    }
+
+    #retry-btn:active {
+      background: #2e2e1a;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- LOADING / ERROR OVERLAY -->
+  <div id="overlay">
+    <div class="skull">&#x1F480;</div>
+    <div id="spinner" class="spinner"></div>
+    <div id="overlay-msg" class="overlay-label">Loading today's show...</div>
+    <button id="retry-btn" onclick="init()">Try Again</button>
+  </div>
+
+  <!-- HEADER -->
+  <div id="header">
+    <div id="header-title">GD Today in History</div>
+    <div id="header-date">—</div>
+    <div id="header-venue">—</div>
+    <div id="header-location"></div>
+  </div>
+
+  <!-- TAPE INFO -->
+  <div id="tape-bar">
+    <div id="tape-icon">&#x1F4FC;</div>
+    <div id="tape-text">
+      <div id="tape-source">—</div>
+      <div id="tape-lineage">—</div>
+    </div>
+    <div id="tape-rating"></div>
+  </div>
+
+  <!-- TRACKLIST -->
+  <div id="tracklist-container">
+    <div id="tracklist"></div>
+  </div>
+
+  <!-- PROGRESS BAR (sits just above bottom bar) -->
+  <div id="progress-bar-wrap">
+    <div id="progress-bar"></div>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div id="bottom-bar">
+    <div id="play-btn" onclick="togglePlayPause()">&#x25B6;&#xFE0F;</div>
+    <div id="now-playing-wrap">
+      <span id="now-playing">Nothing playing</span>
+    </div>
+  </div>
+
+</div>
+
+<audio id="audio-player" preload="none"></audio>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── State ──────────────────────────────────────────
+  const state = {
+    tracks: [],          // flat array of all tracks across sets
+    currentIdx: -1,
+    isPlaying: false,
+    showData: null,
+    sourceData: null,
+  };
+
+  // ── DOM refs ───────────────────────────────────────
+  const overlay     = document.getElementById('overlay');
+  const spinner     = document.getElementById('spinner');
+  const overlayMsg  = document.getElementById('overlay-msg');
+  const retryBtn    = document.getElementById('retry-btn');
+  const headerDate  = document.getElementById('header-date');
+  const headerVenue = document.getElementById('header-venue');
+  const headerLoc   = document.getElementById('header-location');
+  const tapeSource  = document.getElementById('tape-source');
+  const tapeLineage = document.getElementById('tape-lineage');
+  const tapeRating  = document.getElementById('tape-rating');
+  const tracklist   = document.getElementById('tracklist');
+  const playBtn     = document.getElementById('play-btn');
+  const nowPlaying  = document.getElementById('now-playing');
+  const progressBar = document.getElementById('progress-bar');
+  const audio       = document.getElementById('audio-player');
+
+  // ── Helpers ────────────────────────────────────────
+  function formatDuration(secs) {
+    if (!secs || secs <= 0) return '';
+    const m = Math.floor(secs / 60);
+    const s = String(Math.floor(secs % 60)).padStart(2, '0');
+    return m + ':' + s;
+  }
+
+  function formatDisplayDate(dateStr) {
+    // dateStr like "1977-05-08"
+    const months = ['Jan','Feb','Mar','Apr','May','Jun',
+                    'Jul','Aug','Sep','Oct','Nov','Dec'];
+    const parts = dateStr.split('-');
+    if (parts.length < 3) return dateStr;
+    const y = parts[0];
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    return months[m] + ' ' + d + ', ' + y;
+  }
+
+  function todayMonthDay() {
+    const now = new Date();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return m + '-' + d;
+  }
+
+  // ── Error / Loading states ─────────────────────────
+  function showLoading(msg) {
+    overlay.classList.remove('hidden');
+    spinner.style.display = 'block';
+    retryBtn.style.display = 'none';
+    overlayMsg.textContent = msg || 'Loading...';
+  }
+
+  function showError(msg) {
+    overlay.classList.remove('hidden');
+    spinner.style.display = 'none';
+    retryBtn.style.display = 'block';
+    overlayMsg.textContent = msg;
+  }
+
+  function hideOverlay() {
+    overlay.classList.add('hidden');
+  }
+
+  // ── API calls ──────────────────────────────────────
+  async function fetchTodayShows() {
+    const url = 'https://api.relisten.net/api/v2/artists/grateful-dead/shows/today';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' from shows/today');
+    return res.json();
+  }
+
+  async function fetchShowDetail(dateStr) {
+    // dateStr = "YYYY-MM-DD"
+    const url = 'https://api.relisten.net/api/v2/artists/grateful-dead/shows/' + dateStr;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' from show detail');
+    return res.json();
+  }
+
+  // ── Main init ──────────────────────────────────────
+  async function init() {
+    showLoading('Loading today\'s shows...');
+    state.tracks = [];
+    state.currentIdx = -1;
+    state.isPlaying = false;
+    audio.pause();
+    audio.src = '';
+    tracklist.innerHTML = '';
+    updateNowPlaying();
+    updatePlayBtn();
+
+    try {
+      // Step 1: get all shows on today's month/day
+      const shows = await fetchTodayShows();
+      if (!shows || shows.length === 0) {
+        showError('No Grateful Dead shows found for today in history.');
+        return;
+      }
+
+      // Step 2: pick best-rated show (handle null ratings gracefully)
+      const sorted = shows.slice().sort((a, b) => {
+        return (b.avg_rating || 0) - (a.avg_rating || 0);
+      });
+      const bestShow = sorted[0];
+      state.showData = bestShow;
+
+      showLoading('Found ' + shows.length + ' show' + (shows.length !== 1 ? 's' : '') + '...');
+
+      // Step 3: fetch show detail for sources
+      const detail = await fetchShowDetail(bestShow.display_date);
+      if (!detail || !detail.sources || detail.sources.length === 0) {
+        showError('No recordings found for ' + bestShow.display_date + '.');
+        return;
+      }
+
+      // Step 4: pick best-rated source
+      const sources = detail.sources.slice().sort((a, b) => {
+        return (b.avg_rating || 0) - (a.avg_rating || 0);
+      });
+      const bestSource = sources[0];
+      state.sourceData = bestSource;
+
+      // Step 5: flatten tracks
+      const allTracks = [];
+      (bestSource.sets || []).forEach(function (set) {
+        (set.tracks || []).forEach(function (track) {
+          allTracks.push({
+            title: track.title || 'Unknown',
+            duration: track.duration || 0,
+            mp3_url: track.mp3_url || '',
+            setName: set.name || '',
+            isEncore: !!set.is_encore,
+            setIndex: set.index,
+            position: track.track_position,
+          });
+        });
+      });
+      state.tracks = allTracks;
+
+      if (allTracks.length === 0) {
+        showError('No tracks found for this recording.');
+        return;
+      }
+
+      // Step 6: render UI
+      renderHeader(bestShow, detail);
+      renderTapeInfo(bestSource);
+      renderTracklist(bestSource.sets || []);
+      hideOverlay();
+
+    } catch (err) {
+      console.error('GD Today error:', err);
+      showError('Could not load show data.\n' + err.message);
+    }
+  }
+
+  // ── Render functions ───────────────────────────────
+  function renderHeader(show, detail) {
+    const dateStr = show.display_date || show.date.slice(0, 10);
+    headerDate.textContent = formatDisplayDate(dateStr);
+
+    const venue = detail.venue || show.venue || {};
+    headerVenue.textContent = venue.name || 'Unknown Venue';
+    headerLoc.textContent   = venue.location || '';
+  }
+
+  function renderTapeInfo(src) {
+    const srcLine = src.source || src.taper || '';
+    tapeSource.textContent  = srcLine ? srcLine.slice(0, 60) : 'Unknown source';
+    tapeLineage.textContent = (src.lineage || '').replace(/\s+/g, ' ').slice(0, 70) || 'No lineage info';
+
+    if (src.avg_rating && src.avg_rating > 0) {
+      tapeRating.textContent = src.avg_rating.toFixed(1) + ' \u2605';
+    } else {
+      tapeRating.textContent = '';
+    }
+  }
+
+  function renderTracklist(sets) {
+    tracklist.innerHTML = '';
+
+    // Build a flat position counter for track numbers
+    let posCounter = 0;
+
+    sets.forEach(function (set, setIdx) {
+      const tracks = set.tracks || [];
+      if (tracks.length === 0) return;
+
+      // Set label
+      const labelEl = document.createElement('div');
+      labelEl.className = 'set-label';
+      if (set.is_encore) {
+        labelEl.textContent = 'Encore';
+      } else {
+        // Count non-encore sets to label them Set 1, Set 2, etc.
+        const nonEncoreSets = sets.filter(function(s, i) { return !s.is_encore && i <= setIdx; });
+        labelEl.textContent = nonEncoreSets.length > 1
+          ? 'Set ' + nonEncoreSets.length
+          : 'Set 1';
+      }
+      tracklist.appendChild(labelEl);
+
+      tracks.forEach(function (track) {
+        const flatIdx = posCounter++;
+
+        const row = document.createElement('div');
+        row.className = 'track-row';
+        row.dataset.idx = flatIdx;
+
+        row.innerHTML =
+          '<div class="track-num">' + track.track_position + '</div>' +
+          '<div class="play-indicator"><div class="bars">' +
+            '<div class="bar"></div><div class="bar"></div><div class="bar"></div>' +
+          '</div></div>' +
+          '<div class="track-title">' + escapeHtml(track.title || 'Track ' + track.track_position) + '</div>' +
+          '<div class="track-dur">' + formatDuration(track.duration) + '</div>';
+
+        row.addEventListener('click', function () {
+          playTrack(flatIdx);
+        });
+
+        tracklist.appendChild(row);
+      });
+    });
+  }
+
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ── Playback ───────────────────────────────────────
+  function playTrack(idx) {
+    if (idx < 0 || idx >= state.tracks.length) return;
+
+    const track = state.tracks[idx];
+    if (!track.mp3_url) {
+      // Skip tracks with no URL
+      advanceTrack(1);
+      return;
+    }
+
+    state.currentIdx = idx;
+    state.isPlaying = true;
+
+    audio.src = track.mp3_url;
+    audio.load();
+    audio.play().catch(function (e) {
+      console.warn('Audio play error:', e);
+    });
+
+    updateTrackHighlight();
+    updateNowPlaying();
+    updatePlayBtn();
+  }
+
+  function togglePlayPause() {
+    if (state.currentIdx === -1) {
+      // Nothing ever played — start from first track
+      if (state.tracks.length > 0) playTrack(0);
+      return;
+    }
+
+    if (state.isPlaying) {
+      audio.pause();
+      state.isPlaying = false;
+    } else {
+      audio.play().catch(function (e) { console.warn(e); });
+      state.isPlaying = true;
+    }
+    updatePlayBtn();
+    updateTrackHighlight();
+  }
+
+  function advanceTrack(dir) {
+    const next = state.currentIdx + dir;
+    if (next >= 0 && next < state.tracks.length) {
+      playTrack(next);
+    } else {
+      // End of show
+      state.isPlaying = false;
+      state.currentIdx = -1;
+      updatePlayBtn();
+      updateNowPlaying();
+      updateTrackHighlight();
+      progressBar.style.width = '0%';
+    }
+  }
+
+  function updateTrackHighlight() {
+    const rows = tracklist.querySelectorAll('.track-row');
+    rows.forEach(function (row) {
+      const idx = parseInt(row.dataset.idx, 10);
+      row.classList.toggle('playing', idx === state.currentIdx);
+      row.classList.toggle('paused', idx === state.currentIdx && !state.isPlaying);
+    });
+
+    // Scroll active track into view
+    if (state.currentIdx >= 0) {
+      const activeRow = tracklist.querySelector('.track-row.playing');
+      if (activeRow) {
+        activeRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+  }
+
+  function updatePlayBtn() {
+    // play triangle vs pause bars
+    playBtn.innerHTML = state.isPlaying
+      ? '&#x23F8;&#xFE0F;'   // pause
+      : '&#x25B6;&#xFE0F;';  // play
+  }
+
+  function updateNowPlaying() {
+    if (state.currentIdx < 0 || !state.tracks[state.currentIdx]) {
+      nowPlaying.textContent = 'Nothing playing';
+      nowPlaying.classList.remove('marquee');
+      return;
+    }
+    const title = state.tracks[state.currentIdx].title;
+    nowPlaying.textContent = title;
+
+    // Enable marquee if text overflows the container (196px available)
+    nowPlaying.classList.remove('marquee');
+    requestAnimationFrame(function () {
+      if (nowPlaying.scrollWidth > 188) {
+        // Duplicate text for seamless loop
+        nowPlaying.textContent = title + '     ' + title;
+        nowPlaying.classList.add('marquee');
+      }
+    });
+  }
+
+  // ── Audio events ───────────────────────────────────
+  audio.addEventListener('ended', function () {
+    advanceTrack(1);
+  });
+
+  audio.addEventListener('timeupdate', function () {
+    if (audio.duration && audio.duration > 0) {
+      const pct = (audio.currentTime / audio.duration) * 100;
+      progressBar.style.width = pct.toFixed(1) + '%';
+    }
+  });
+
+  audio.addEventListener('play', function () {
+    state.isPlaying = true;
+    updatePlayBtn();
+    updateTrackHighlight();
+  });
+
+  audio.addEventListener('pause', function () {
+    state.isPlaying = false;
+    updatePlayBtn();
+    updateTrackHighlight();
+  });
+
+  audio.addEventListener('error', function () {
+    console.warn('Audio error on track', state.currentIdx);
+    // Try next track after a short delay
+    setTimeout(function () { advanceTrack(1); }, 800);
+  });
+
+  // ── R1 hardware button support ─────────────────────
+  window.addEventListener('sideClick', function () {
+    togglePlayPause();
+  });
+
+  window.addEventListener('scrollUp', function () {
+    if (state.currentIdx > 0) playTrack(state.currentIdx - 1);
+  });
+
+  window.addEventListener('scrollDown', function () {
+    if (state.currentIdx < state.tracks.length - 1) playTrack(state.currentIdx + 1);
+  });
+
+  // ── SDK message handler (no-op, not using LLM) ─────
+  window.onPluginMessage = function (data) {
+    // Not used in this creation
+  };
+
+  // ── Boot ───────────────────────────────────────────
+  init();
+
+  // Expose for retry button
+  window.init = init;
+  window.togglePlayPause = togglePlayPause;
+
+})();
+</script>
+</body>
+</html>
