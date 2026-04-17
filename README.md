@@ -2,6 +2,8 @@
 
 A Grateful Dead "Today in History" creation for the Rabbit R1. Shows the top-rated concert from the current calendar date across all years, with a full tracklist and inline audio playback.
 
+**[Live app](https://mattfinlayson.github.io/shakedown/) · [Install on R1](https://mattfinlayson.github.io/shakedown/qr.html)**
+
 ## What It Does
 
 On load, the app queries the [Relisten API](https://api.relisten.net) for the highest-rated Grateful Dead show recorded on today's month and day, then pulls the best-rated recording of that show. You get:
@@ -15,7 +17,7 @@ On load, the app queries the [Relisten API](https://api.relisten.net) for the hi
 
 ## Installing on R1
 
-Scan the QR code at `/qr.html` using your R1's Creations scanner. The code encodes all the metadata the R1 needs to install it directly.
+Scan the QR code at [qr.html](https://mattfinlayson.github.io/shakedown/qr.html) using your R1's Creations scanner. The code encodes all the metadata the R1 needs to install it directly.
 
 ## Running Locally
 
