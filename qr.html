@@ -72,7 +72,7 @@
   <p class="subtitle">Scan this QR code with your Rabbit R1 to install the Grateful Dead "Today in History" creation.</p>
 
   <div id="qr-container">
-    <canvas id="qr"></canvas>
+    <img id="qr" width="220" height="220" alt="QR Code">
   </div>
   <p class="url" id="url-label"></p>
 
@@ -87,33 +87,15 @@
   </div>
 
   <script>
-    // Minimal QR code generator (no CDN dependency)
-    // Uses the qrcodejs approach via a small inline lib
     const CREATION_URL = (() => {
       const base = window.location.href.replace(/\/qr\.html.*$/, '');
-      return base.endsWith('/') ? base + 'index.html' : base + '/index.html';
+      return (base.endsWith('/') ? base : base + '/') + 'index.html';
     })();
 
     document.getElementById('url-label').textContent = CREATION_URL;
-
-    // Load QRCode library from CDN
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-    script.onload = () => {
-      new QRCode(document.getElementById('qr'), {
-        text: CREATION_URL,
-        width: 220,
-        height: 220,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.M
-      });
-    };
-    script.onerror = () => {
-      document.getElementById('qr-container').innerHTML =
-        '<p style="color:#c00;font-size:13px;padding:8px">Could not load QR library.<br>URL: ' + CREATION_URL + '</p>';
-    };
-    document.head.appendChild(script);
+    document.getElementById('qr').src =
+      'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' +
+      encodeURIComponent(CREATION_URL);
   </script>
 </body>
 </html>
