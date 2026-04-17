@@ -87,15 +87,23 @@
   </div>
 
   <script>
-    const CREATION_URL = (() => {
-      const base = window.location.href.replace(/\/qr\.html.*$/, '');
-      return (base.endsWith('/') ? base : base + '/') + 'index.html';
+    const base = (() => {
+      const b = window.location.href.replace(/\/qr\.html.*$/, '');
+      return b.endsWith('/') ? b : b + '/';
     })();
 
-    document.getElementById('url-label').textContent = CREATION_URL;
+    const payload = JSON.stringify({
+      title: "GD Today in History",
+      url: base + 'index.html',
+      description: "Top-rated Grateful Dead tape from this date in history",
+      iconUrl: base + 'icon.svg',
+      themeColor: "#a8885a"
+    });
+
+    document.getElementById('url-label').textContent = base + 'index.html';
     document.getElementById('qr').src =
       'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' +
-      encodeURIComponent(CREATION_URL);
+      encodeURIComponent(payload);
   </script>
 </body>
 </html>
